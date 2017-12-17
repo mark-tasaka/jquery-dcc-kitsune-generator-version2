@@ -1,0 +1,2 @@
+# jquery-dcc-kitsune-generator-version2
+A second iteration of the Dungeon Crawl Classics Kitsune character generator using JQuery to replace the JavaScript DOM tags. In this iteration, external js files have been created for specific functions for the generator (i.e. Die Rolling methods, random languages, etc).  By using external js files, the code becomes easier to update and modify for future iterations.  As well, the external js files helps foster a higher degree of cohesion and a lower degree of coupling (aim in good program design) than the previous iteration.  
