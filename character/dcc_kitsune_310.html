@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dungeon Crawl Classics Kitsune Character Generator</title>
+    
+	<meta charset="UTF-8">
+	<meta name="description" content="Dungeon Crawl Classics kitsune Character Generator. Goodman Games.">
+	<meta name="keywords" content="Dungeon Crawl Classics, Goodman Games,HTML5,CSS,JavaScript">
+	<meta name="author" content="Mark Tasaka 2017">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    
+    <script type="text/javascript" src="./js/dieRoll.js"></script>
+    <script type="text/javascript" src="./js/occupations.js"></script>
+    <script type="text/javascript" src="./js/abilityModifiers.js"></script>
+    <script type="text/javascript" src="./js/luckySigns.js"></script>
+    <script type="text/javascript" src="./js/kitsuneLanguages.js"></script>
+    <script type="text/javascript" src="./js/adjustments.js"></script>
+    
+	<link rel="stylesheet" type="text/css" href="css/dcc_kitsune.css">
+	
+</head>
+<body>
+	
+
+	
+   
+  <img id="character_sheet"/>
+   <section>
+    	<p id="name"></p>
+	
+		<span id="strength"></span> <span id="strengthMod"></span>
+		<span id="agility"></span>  <span id="agilityMod"></span>
+		<span id="stamina"></span>  <span id="staminaMod"></span>
+		<span id="personality"></span> <span id="personalityMod"></span>
+		<span id="intelligence"></span> <span id="intelligenceMod"></span>
+		<span id="luck"></span> <span id="luckMod"></span>
+
+    	<p id="occupation"></p>
+    	<p id="alignment"></p>
+
+       
+	   <p id="luckySignDescription"><span id="luckySignNotes"></span>: <span id="luckyRoll"></span> (Bonus: <span id="luckySignBonus"></span>)</p>
+	   
+	   
+	   <P id="languages"><span id="baseLanguages"></span><span id="bonusLanguages"></span></P>
+	   
+		<span id="baseArmourClass"></span>
+	   
+	   <span id="level"></span>
+			 
+	  <span id="title"></span>
+	  <span id="hitPoints"></span>
+	   <span id="zeroWeapon"></span>
+	   <span id="fumbleDie"></span>
+	   <span id="init"></span>
+	   <span id="speed"></span>	 
+	   <span id="melee"></span>	 	
+	   <span id="range"></span>	  
+	   
+	   <span id="ref"></span>
+	   <span id="fort"></span>
+	   <span id="will"></span>
+	   
+	   
+	   <span id="actionDie"></span>
+	   <span id="critDie"></span>
+	   <span id="critTable"></span>
+       
+       <span id="knownSpells"></span>
+       <span id="maxSpells"></span>
+	   
+	</section>
+	
+
+		
+  <script>
+	  
+
+	/*
+	 Character() - kitsune Character Constructor
+	*/
+	function Character() {
+    var strength = rollDice(6, 4, 1, 0);
+    var agility = rollDice(6, 4, 1, 0);
+    var stamina = rollDice(6, 4, 1, 0);
+    var	personality = rollDice(6, 4, 1, 0);
+    var	intelligence = rollDice(6, 4, 1, 0);
+    var	luck = rollDice(6, 4, 1, 0);
+	var	occupation = getOccupation();
+	var birthAugur = getLuckySign();
+	var strengthModifier = getStrengthModifier(strength);
+	var staminaModifier = getStaminaModifier(stamina);
+	var agilityModifier = getAgilityModifier(agility);
+	var personalityModifier = getPersonalityModifier(personality);
+	var intelligenceModifier = getIntelligenceModifier(intelligence);
+	var luckModifier = getLuckModifier(luck);
+	var baseAC = getBaseArmourClass(agilityModifier) + adjustAC(birthAugur, luckModifier);
+	var kitsune = getKitsune();
+
+		var kitsuneGenerator = {
+			"name": "",
+			"strength": strength,
+			"agility": agility,
+			"stamina": stamina,
+			"personality": personality,
+			"intelligence": intelligence,
+			"luck": luck,
+			"strengthModifier": strengthModifier,
+			"agilityModifier": agilityModifier,
+			"staminaModifier": staminaModifier,
+			"personalityModifier": personalityModifier,
+			"intelligenceModifier": intelligenceModifier,
+			"luckModifier":  luckModifier,
+			"occupation":  occupation.occupation,
+            "alignment": "Chaos",
+			"luckySign": birthAugur.luckySign,
+			"luckyRoll": birthAugur.luckyRoll,
+			"luckySignBonus": luckModifier,
+			"baseLanguages": "Common, Kitsune", 
+			"bonusLanguages": getBonusLanguages (intelligenceModifier, birthAugur, luckModifier),
+			"level": kitsune.level,
+            "title": kitsune.title,
+            "spells": kitsune.knownSpells,
+            "maxSpells": kitsune.maxSpellLevel,
+			"baseArmourClass": baseAC,
+			"hitPoints": hitPoints (kitsune, staminaModifier, hitPointAdjustPerLevel(birthAugur, luckModifier)),
+			"zeroWeapon": occupation.trainedWeapon,
+			"fumbleDie": "d4" + addSign(adjustFumble(birthAugur, luckModifier)),
+			"init": agilityModifier + adjustInit(birthAugur, luckModifier),
+			"speed": 30 + addLuckToSpeed(birthAugur, luckModifier) + "'",
+			"melee": kitsune.attackBonus + strengthModifier + meleeAdjust(birthAugur, luckModifier),
+			"range": kitsune.attackBonus + agilityModifier + rangeAdjust(birthAugur, luckModifier),
+			"ref": kitsune.ref + agilityModifier + adjustRef(birthAugur, luckModifier),
+			"fort": kitsune.fort + staminaModifier + adjustFort(birthAugur,luckModifier),
+			"will": kitsune.will + personalityModifier + adjustWill(birthAugur, luckModifier),
+			"actionDie": kitsune.actionDice,
+			"critDie": kitsune.critDie + "" + addSign(adjustCrit(birthAugur, luckModifier)),
+			"critTable": kitsune.critTable
+
+		}; 
+		return kitsuneGenerator;
+	  
+	  }
+	  
+
+	  
+
+
+
+
+/*
+getKitsune - retreives the kitsune with the appropriate statistics for the kitsune's Level
+*/
+   
+function getKitsune() {
+	var kitsune = [
+        
+		{"level": 1,
+		 "title": "Nonconformist",
+		 "actionDice": "1d20",
+		 "attackBonus": 1,
+		 "critDie": "1d6",
+		 "critTable": "II",
+		 "hd": 1,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 1,
+		 "knownSpells": 3,
+         "maxSpellLevel": 1
+        },
+        
+		{"level": 2,
+		 "title": "Trickster",
+		 "actionDice": "1d20",
+		 "attackBonus": 1,
+		 "critDie": "1d8",
+		 "critTable": "II",
+		 "hd": 2,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 1,
+		 "knownSpells": 4,
+         "maxSpellLevel": 1
+        },
+        
+		{"level": 3,
+		 "title": "Prankster",
+		 "actionDice": "1d20",
+		 "attackBonus": 2,
+		 "critDie": "1d8",
+		 "critTable": "II",
+		 "hd": 3,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 2,
+		 "knownSpells": 5,
+         "maxSpellLevel": 2
+        },
+        
+		{"level": 4,
+		 "title": "Radical",
+		 "actionDice": "1d20",
+		 "attackBonus": 2,
+		 "critDie": "1d10",
+		 "critTable": "II",
+		 "hd": 4,
+		 "ref": 2,
+		 "fort": 2,
+		 "will": 2,
+		 "knownSpells": 6,
+         "maxSpellLevel": 2
+        },
+                
+		{"level": 5,
+		 "title": "Free Spirit",
+		 "actionDice": "1d20+1d14",
+		 "attackBonus": 3,
+		 "critDie": "1d10",
+		 "critTable": "II",
+		 "hd": 5,
+		 "ref": 2,
+		 "fort": 2,
+		 "will": 3,
+		 "knownSpells": 7,
+         "maxSpellLevel": 3
+        },
+               
+		{"level": 6,
+		 "title": "Free Spirit",
+		 "actionDice": "1d20+1d16",
+		 "attackBonus": 3,
+		 "critDie": "1d12",
+		 "critTable": "II",
+		 "hd": 6,
+		 "ref": 2,
+		 "fort": 2,
+		 "will": 4,
+		 "knownSpells": 8,
+         "maxSpellLevel": 3
+        },
+        		
+        {"level": 7,
+		 "title": "Free Spirit",
+		 "actionDice": "1d20+1d20",
+		 "attackBonus": 4,
+		 "critDie": "1d12",
+		 "critTable": "II",
+		 "hd": 7,
+		 "ref": 3,
+		 "fort": 3,
+		 "will": 4,
+		 "knownSpells": 9,
+         "maxSpellLevel": 4
+        },
+                		
+        {"level": 8,
+		 "title": "Free Spirit",
+		 "actionDice": "1d20+1d20",
+		 "attackBonus": 4,
+		 "critDie": "1d14",
+		 "critTable": "II",
+		 "hd": 8,
+		 "ref": 3,
+		 "fort": 3,
+		 "will": 5,
+		 "knownSpells": 10,
+         "maxSpellLevel": 4
+        },
+                        		
+        {"level": 9,
+		 "title": "Free Spirit",
+		 "actionDice": "1d20+1d20",
+		 "attackBonus": 5,
+		 "critDie": "1d14",
+		 "critTable": "II",
+		 "hd": 9,
+		 "ref": 3,
+		 "fort": 3,
+		 "will": 5,
+		 "knownSpells": 12,
+         "maxSpellLevel": 5
+        },
+                
+        {"level": 10,
+		 "title": "Free Spirit",
+		 "actionDice": "1d20+1d20+1d14",
+		 "attackBonus": 5,
+		 "critDie": "1d16",
+		 "critTable": "II",
+		 "hd": 10,
+		 "ref": 4,
+		 "fort": 4,
+		 "will": 6,
+		 "knownSpells": 14,
+         "maxSpellLevel": 5
+        }
+		
+	];
+	
+	
+	return kitsune[9]; 
+}
+	  
+
+  
+        var imgData = "images/dcc_kitsune.png";
+      
+        $("#character_sheet").attr("src", imgData);
+
+	  var data = Character();
+		 
+
+      $("#name").html(data.name);
+      $("#occupation").html(data.occupation);
+      $("#title").html(data.title);
+                
+          $("#strength").html(data.strength);
+          $("#strengthMod").html(addModifierSign(data.strengthModifier));
+          
+          $("#agility").html(data.agility);
+          $("#agilityMod").html(addModifierSign(data.agilityModifier));
+          
+          $("#agility").html(data.agility);
+          $("#agilityMod").html(addModifierSign(data.agilityModifier));
+          
+          $("#stamina").html(data.stamina);
+          $("#staminaMod").html(addModifierSign(data.staminaModifier));
+          
+          $("#personality").html(data.personality);
+          $("#personalityMod").html(addModifierSign(data.personalityModifier));
+          
+          $("#intelligence").html(data.intelligence);
+          $("#intelligenceMod").html(addModifierSign(data.intelligenceModifier));
+          
+          $("#luck").html(data.luck);
+          $("#luckMod").html(addModifierSign(data.luckModifier));
+          
+      $("#alignment").html(data.alignment);
+      $("#luckySignNotes").html(data.luckySign);
+      $("#luckyRoll").html(data.luckyRoll);
+          
+      $("#luckySignBonus").html(addModifierSign(data.luckySignBonus));
+      $("#level").html(data.level);
+      $("#baseLanguages").html(data.baseLanguages);
+      $("#bonusLanguages").html(data.bonusLanguages);
+      
+      $("#baseArmourClass").html(data.baseArmourClass);
+      $("#hitPoints").html(data.hitPoints);
+      $("#zeroWeapon").html(data.zeroWeapon);
+      $("#fumbleDie").html(data.fumbleDie);
+      
+      $("#init").html(addModifierSign(data.init));
+      $("#speed").html(data.speed);
+      
+      $("#melee").html(addModifierSign(data.melee));
+      $("#range").html(addModifierSign(data.range));
+      $("#ref").html(addModifierSign(data.ref));
+      $("#fort").html(addModifierSign(data.fort));
+      $("#will").html(addModifierSign(data.will));
+      
+      $("#actionDie").html(data.actionDie);
+      $("#critDie").html(data.critDie);
+      $("#critTable").html(data.critTable);
+      
+      $("#knownSpells").html(data.spells);
+      $("#maxSpells").html(data.maxSpells);
+      
+
+  </script>
+		
+	
+    
+</body>
+</html>
